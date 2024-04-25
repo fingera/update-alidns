@@ -4,6 +4,8 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"net/http"
+	"io/ioutil"
 
 	"github.com/aliyun/alibaba-cloud-sdk-go/services/alidns"
 )
@@ -20,10 +22,10 @@ func main() {
 	flag.StringVar(&region, "region", "cn-hangzhou", "AK")
 	flag.StringVar(&ak, "ak", os.Getenv("AK"), "AK")
 	flag.StringVar(&sk, "sk", os.Getenv("SK"), "SK")
-	flag.StringVar(&dn, "dn", "umutech.com", "DomainName")
-	flag.StringVar(&rr, "rr", "umu618", "RR")
+	flag.StringVar(&dn, "dn", os.Getenv("DomainName"), "DomainName")
+	flag.StringVar(&rr, "rr", os.Getenv("RR"), "RR")
 	flag.StringVar(&t, "t", "A", "Type")
-	flag.StringVar(&v, "v", "", "Value")
+	flag.StringVar(&v, "v", os.Getenv("IP"), "Value")
 
 	flag.Parse()
 
@@ -52,8 +54,17 @@ func main() {
 	}
 	fmt.Printf("Type: %s\n", t)
 	if v == "" {
-		fmt.Println("Error: no Value!")
-		return
+		res, err := http.Get("https://ifconfig.me/ip")
+		if err != nil || res.StatusCode != 200 {
+			fmt.Printf("Error: making http request: %s\n", err)
+			return
+		}
+		resBody, err := ioutil.ReadAll(res.Body)
+		if err != nil {
+			fmt.Printf("Error: could not read response body: %s\n", err)
+			return
+		}
+		v = string(resBody)
 	}
 	fmt.Printf("Value: %s\n", v)
 
