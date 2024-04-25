@@ -1,6 +1,6 @@
 module github.com/UMU618/update-alidns
 
-go 1.22.2
+go 1.19
 
 require github.com/aliyun/alibaba-cloud-sdk-go v1.62.719
 
