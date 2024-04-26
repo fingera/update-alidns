@@ -4,9 +4,37 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"net/http"
+	"io/ioutil"
+	"encoding/json"
 
 	"github.com/aliyun/alibaba-cloud-sdk-go/services/alidns"
 )
+
+type Address struct {
+    Ip string `json:"ip"`
+}
+
+func requestIp(url string) (string, error) {
+	var addr Address
+
+	res, err := http.Get(url)
+	if err != nil {
+		return "", err
+	}
+	if res.StatusCode != 200 {
+		return "", fmt.Errorf("%s statusCode: %d", url, res.StatusCode)
+	}
+	resBody, err := ioutil.ReadAll(res.Body)
+	if err != nil {
+		return "", err
+	}
+	if err := json.Unmarshal(resBody, &addr); err != nil {
+		return "", err
+	}
+
+	return addr.Ip, nil;
+}
 
 func main() {
 	var region string
@@ -52,8 +80,24 @@ func main() {
 	}
 	fmt.Printf("Type: %s\n", t)
 	if v == "" {
-		fmt.Println("Error: no Value!")
-		return
+		var url string
+		switch (t) {
+		case "A":
+			url = "https://ipv4.jsonip.com"
+			break;
+		case "AAAA":
+			url = "https://ipv6.jsonip.com"
+			break;
+		default:
+			fmt.Println("Error: bad Type %s", t)
+			return;
+		}
+		ip, err := requestIp(url)
+		if err != nil {
+			fmt.Println("Error: making http request: %s", err)
+			return
+		}
+		v = ip
 	}
 	fmt.Printf("Value: %s\n", v)
 
