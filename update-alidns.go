@@ -135,6 +135,10 @@ func main() {
 		var rid string = ""
 		for _, r := range existed.DomainRecords.Record {
 			if r.RR == rr {
+				if r.Type == t && r.Value == v {
+					fmt.Println("No change!")
+					return
+				}
 				rid = r.RecordId
 				break
 			}
